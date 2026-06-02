@@ -8,6 +8,8 @@ import type {
   ModifierList,
   Money,
 } from "@/types";
+import { isAvailableNow } from "@/lib/availability";
+import { categoryAvailability } from "@/config/availability";
 
 function getSquareBaseUrl(): string {
   return process.env.SQUARE_ENVIRONMENT === "production"
@@ -225,6 +227,11 @@ export async function fetchMenuForLocation(locationId: string): Promise<{
     });
   }
 
+  // Resolve location timezone for availability checks
+  const locationsList = await fetchLocations();
+  const targetLocation = locationsList.find((l) => l.id === locationId);
+  const locationTimezone = targetLocation?.timezone ?? "America/New_York";
+
   // Map items, filtering by location
   const items: MenuItem[] = [];
 
@@ -274,6 +281,10 @@ export async function fetchMenuForLocation(locationId: string): Promise<{
       if (mapped) modifierLists.push(mapped);
     }
 
+    // Availability based on category rule + location timezone
+    const rule = categoryAvailability[categoryName];
+    const availableNow = rule ? isAvailableNow(rule, locationTimezone) : true;
+
     items.push({
       id: obj.id,
       name: itemData.name ?? "Unnamed item",
@@ -281,6 +292,7 @@ export async function fetchMenuForLocation(locationId: string): Promise<{
       imageUrl,
       categoryId,
       categoryName,
+      availableNow,
       price,
       modifierLists,
     });
@@ -323,7 +335,8 @@ function extractLowestPrice(
 
 
 export async function fetchItemById(
-  itemId: string
+  itemId: string,
+  locationId?: string
 ): Promise<MenuItem | null> {
   try {
     const response = await fetchSquare<{
@@ -351,6 +364,15 @@ export async function fetchItemById(
       const categoryId = getItemCategoryId(itemData);
       const categoryObj = categoryId ? categoryObjectsById.get(categoryId) : undefined;
       const categoryName = categoryObj?.category_data?.name ?? "Uncategorized";
+      // Compute availability only if a location was provided
+      let availableNow = true;
+      if (locationId) {
+        const locationsList = await fetchLocations();
+        const targetLocation = locationsList.find((l) => l.id === locationId);
+        const timezone = targetLocation?.timezone ?? "America/New_York";
+        const rule = categoryAvailability[categoryName];
+        availableNow = rule ? isAvailableNow(rule, timezone) : true;
+      }
       const price = extractLowestPrice(itemData.variations ?? []);
       const imageUrl = resolveImageUrl(itemData.image_ids ?? [], imageObjectsById);
 
@@ -370,6 +392,7 @@ export async function fetchItemById(
         imageUrl,
         categoryId,
         categoryName,
+        availableNow,
         price,
         modifierLists,
       };
@@ -407,6 +430,15 @@ export async function fetchItemById(
   const price = extractLowestPrice(itemData.variations ?? []);
   const imageUrl = resolveImageUrl(itemData.image_ids ?? [], imageObjectsById);
 
+  let availableNow = true;
+  if (locationId) {
+    const locationsList = await fetchLocations();
+    const targetLocation = locationsList.find((l) => l.id === locationId);
+    const timezone = targetLocation?.timezone ?? "America/New_York";
+    const rule = categoryAvailability[categoryName];
+    availableNow = rule ? isAvailableNow(rule, timezone) : true;
+  }
+
   const modifierLists: ModifierList[] = [];
   for (const mlInfo of itemData.modifier_list_info ?? []) {
     if (!mlInfo.modifier_list_id) continue;
@@ -423,6 +455,7 @@ export async function fetchItemById(
     imageUrl,
     categoryId,
     categoryName,
+    availableNow,
     price,
     modifierLists,
   };

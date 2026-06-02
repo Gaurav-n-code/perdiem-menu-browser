@@ -27,8 +27,8 @@ interface ItemPageProps {
  *     how the data is requested
  *   - In production, this could be a separate microservice
  */
-async function fetchItemDetail(id: string): Promise<ItemDetailResponse | null> {
-  return (await fetchItemById(id)) as ItemDetailResponse | null;
+async function fetchItemDetail(id: string, locationId?: string): Promise<ItemDetailResponse | null> {
+  return (await fetchItemById(id, locationId)) as ItemDetailResponse | null;
 }
 
 export default async function ItemDetailPage({
@@ -41,7 +41,7 @@ export default async function ItemDetailPage({
   let item: ItemDetailResponse | null = null;
 
   try {
-    item = await fetchItemDetail(id);
+    item = await fetchItemDetail(id, locationId);
   } catch {
     // Server-side fetch error — show error UI rather than crashing
     return (
@@ -104,6 +104,12 @@ export default async function ItemDetailPage({
                 {item.categoryName}
               </span>
             </div>
+
+            {item.availableNow === false && (
+              <p className="mt-1 text-sm font-semibold text-rose-600">
+                Unavailable at this location
+              </p>
+            )}
 
             {/* Name + price */}
             <div className="flex items-start justify-between gap-4">

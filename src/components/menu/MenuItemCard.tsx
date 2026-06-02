@@ -19,20 +19,24 @@ interface MenuItemCardProps {
  */
 export function MenuItemCard({ item, locationId }: MenuItemCardProps) {
   const href = `/items/${item.id}?locationId=${locationId}`;
-
   return (
     <Link
       href={href}
-      className="
-        group flex flex-col overflow-hidden rounded-xl border border-stone-200
+      className={
+        `group flex flex-col overflow-hidden rounded-xl border border-stone-200
         bg-white shadow-sm transition-all duration-200
         hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none
         focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
-        animate-fade-in
-      "
+        animate-fade-in` + (item.availableNow === false ? " opacity-70" : "")
+      }
     >
       {/* Image area */}
       <div className="relative h-44 w-full overflow-hidden bg-stone-100">
+        {item.availableNow === false && (
+          <div className="absolute top-3 right-3 z-20 rounded-full bg-stone-900 text-white px-2 py-0.5 text-xs font-semibold">
+            Unavailable
+          </div>
+        )}
         {item.imageUrl ? (
           <Image
             src={item.imageUrl}

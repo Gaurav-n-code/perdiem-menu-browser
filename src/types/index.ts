@@ -56,6 +56,8 @@ export interface MenuItem {
   categoryId: string;
   categoryName: string;
   price: Money | null;
+  /** Whether the item is available right now at the selected location */
+  availableNow?: boolean;
   /**
    * Modifier lists attached to this item.
    * Populated on the detail endpoint; may be empty on list endpoint.

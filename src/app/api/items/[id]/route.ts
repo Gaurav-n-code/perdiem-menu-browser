@@ -26,7 +26,8 @@ export async function GET(
   }
 
   try {
-    const item = await fetchItemById(id);
+    const locationId = _request.nextUrl.searchParams.get("locationId") ?? undefined;
+    const item = await fetchItemById(id, locationId ?? undefined);
 
     if (!item) {
       return NextResponse.json({ error: "Item not found." }, { status: 404 });

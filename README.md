@@ -78,6 +78,17 @@ In the Square sandbox dashboard:
 
 ---
 
+## Availability (time-of-day BONUS point)
+
+This app supports simple time-of-day availability rules per category. The rules live in `src/config/availability.ts` and are evaluated against the selected location's timezone.
+
+- Items whose category has an availability rule will be marked `availableNow: false` when the current local time at the selected location falls outside the configured window.
+- The UI shows an "Unavailable" badge and dims items that are not available right now; the item detail page also surfaces this state.
+
+To experiment with availability, edit `src/config/availability.ts` (e.g. make `Breakfast` include weekends), then reload the app.
+
+---
+
 ## Running tests
 
 ```bash
